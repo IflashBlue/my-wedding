@@ -1,0 +1,37 @@
+{
+  "bride": "Lina Mouss",
+  "groom": "Nathanaël Schmitt",
+  "date": "2027-09-19T15:00:00",
+  "photo": {
+    "src": "assets/couple-placeholder.svg",
+    "alt": "Lina & Nathanaël"
+  },
+  "schedule": [
+    { "time": "15:00", "title": "Cérémonie", "description": "" },
+    { "time": "16:30", "title": "Cocktail", "description": "" },
+    { "time": "19:30", "title": "Dîner", "description": "" },
+    { "time": "22:30", "title": "Soirée dansante", "description": "" }
+  ],
+  "location": {
+    "venue": "Lieu à confirmer",
+    "address": "",
+    "postalCode": "",
+    "city": "France",
+    "mapUrl": "",
+    "accessNotes": "Les informations pratiques (parking, transports, hébergement) seront communiquées prochainement."
+  },
+  "rsvp": {
+    "note": "Merci de nous confirmer votre présence, seul(e) ou accompagné(e), afin que nous puissions tout organiser au mieux.",
+    "deadline": "",
+    "email": "",
+    "phone": ""
+  },
+  "allergies": {
+    "note": "Une allergie ou un régime alimentaire particulier (végétarien, sans gluten...) ? Merci de nous le préciser lors de votre confirmation de présence."
+  },
+  "gift": {
+    "note": "Votre présence est le plus beau des cadeaux ! Nous n'attendons pas de cadeau matériel : une urne sera à votre disposition le jour J pour celles et ceux qui souhaiteraient participer à notre cagnotte.",
+    "fundUrl": ""
+  },
+  "message": "Nous avons hâte de célébrer ce jour avec vous !"
+}
