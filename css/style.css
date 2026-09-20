@@ -528,6 +528,20 @@ body.scene-on .envelope {
   opacity: var(--env-o);
 }
 
+/* Texture kraft : une seule tuile, périodique par construction, posée en
+   multiply sur les dégradés. `background-size` en % de la largeur (toutes
+   les faces font 100 % de l'enveloppe) et `auto` en hauteur : le motif a
+   donc exactement la même échelle partout, et comme toutes les boîtes
+   partent du coin haut-gauche de l'enveloppe, le grain se raccorde d'un
+   pan à l'autre. */
+.envelope__lining,
+.envelope__mouth,
+.envelope__front,
+.envelope__flap {
+  background-size: 55% auto, auto;
+  background-blend-mode: multiply;
+}
+
 body.scene-on .envelope--back { z-index: 2; }
 body.scene-on .envelope--front { z-index: 20; }
 body.scene-on .envelope--lid { z-index: 30; }
@@ -537,7 +551,7 @@ body.scene-on .envelope--lid { z-index: 30; }
   inset: 0;
   transform: translateZ(0);
   border-radius: 8px;
-  background: linear-gradient(170deg, #f0e4d1 0%, #ded9b0 100%);
+  background-image: url("../assets/kraft.png"), linear-gradient(170deg, #f0e4d1 0%, #ded9b0 100%);
 }
 
 /* L'intérieur sombre : il n'apparaît qu'au fur et à mesure que le rabat
@@ -550,7 +564,7 @@ body.scene-on .envelope--lid { z-index: 30; }
   height: 36%;
   transform: translateZ(1px);
   border-radius: 8px 8px 0 0;
-  background: linear-gradient(180deg, #c6b391 0%, #b5a07c 100%);
+  background-image: url("../assets/kraft.png"), linear-gradient(180deg, #c6b391 0%, #b5a07c 100%);
   box-shadow: inset 0 10px 20px rgba(91, 70, 54, 0.35);
   opacity: calc(var(--env-o) * var(--mouth));
 }
@@ -564,7 +578,7 @@ body.scene-on .envelope--lid { z-index: 30; }
   clip-path: polygon(0 0, 100% 0, 50% 100%);
   /* À peine plus clair que la face avant : le pli se lit surtout par
      l'ombre portée le long des diagonales, pas par un écart de teinte. */
-  background: linear-gradient(180deg, #ebdec6 0%, #ddccab 100%);
+  background-image: url("../assets/kraft.png"), linear-gradient(180deg, #ebdec6 0%, #ddccab 100%);
   transform-origin: 50% 0%;
   /* rotateX d'abord : le +Z local bascule vers l'arrière une fois ouvert,
      le rabat se range donc tout seul derrière la doublure. */
@@ -573,8 +587,11 @@ body.scene-on .envelope--lid { z-index: 30; }
   transition: background 0.35s ease;
 }
 
+/* `background-image` et non le raccourci `background`, qui remettrait la
+   liste de couches à zéro et ferait disparaître la texture au moment où
+   le rabat bascule à l'arrière. */
 .envelope--back .envelope__flap {
-  background: linear-gradient(0deg, #d8c9ae 0%, #c6b492 100%);
+  background-image: url("../assets/kraft.png"), linear-gradient(0deg, #d8c9ae 0%, #c6b492 100%);
   box-shadow: inset 0 0 30px rgba(91, 70, 54, 0.12);
 }
 
@@ -592,7 +609,7 @@ body.scene-on .envelope--lid { z-index: 30; }
      ouverte vient de l'intérieur sombre qui apparaît derrière. */
   /* Le dégradé reprend exactement la teinte du dos à la hauteur du bord :
      aucune marche de couleur ne trahit la jointure. */
-  background: linear-gradient(180deg, #e2d2b4 0%, #d3bd98 100%);
+  background-image: url("../assets/kraft.png"), linear-gradient(180deg, #e2d2b4 0%, #d3bd98 100%);
   /* Une box-shadow serait rognée par le clip-path : l'arête du V se
      détacherait alors sans aucune ombre sur la carte qui sort, ce qui se
      lit comme une déchirure. drop-shadow suit la silhouette découpée et
