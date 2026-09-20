@@ -30,19 +30,39 @@ body {
     radial-gradient(circle at 15% 20%, rgba(191, 99, 73, 0.06) 0, transparent 45%),
     radial-gradient(circle at 85% 80%, rgba(138, 151, 114, 0.08) 0, transparent 45%),
     repeating-linear-gradient(45deg, rgba(91, 70, 54, 0.02) 0px, rgba(91, 70, 54, 0.02) 2px, transparent 2px, transparent 12px);
-  padding: 24px 16px 56px;
-  overflow-x: hidden;
+  padding: 0;
+  overflow-x: clip;
 }
 
 .page {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 640px;
+  max-width: 672px;
   margin: 0 auto;
+  padding: 24px 16px 56px;
   display: flex;
   flex-direction: column;
   gap: clamp(24px, 5vw, 36px);
+}
+
+/* Mise en page par défaut (sans JS, ou mouvement réduit) : cartes empilées. */
+.scene,
+.scene__stage {
+  display: block;
+}
+
+.deck {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(24px, 5vw, 36px);
+}
+
+.envelope,
+.outro,
+.scroll-hint {
+  display: none;
 }
 
 .decor {
@@ -61,24 +81,35 @@ body {
   width: 100%;
   min-width: 0;
   max-width: 640px;
+  --pad-x: clamp(24px, 6vw, 56px);
+  --pad-top: clamp(36px, 7vw, 64px);
+  --pad-bottom: clamp(32px, 6vw, 48px);
+  --arch: 220px;
   background: rgba(255, 251, 245, 0.72);
   border: 1px solid rgba(91, 70, 54, 0.18);
-  border-radius: 220px 220px 24px 24px;
-  padding: clamp(36px, 7vw, 64px) clamp(24px, 6vw, 56px) clamp(32px, 6vw, 48px);
+  border-radius: var(--arch) var(--arch) 24px 24px;
+  padding: var(--pad-top) var(--pad-x) var(--pad-bottom);
+  overflow: hidden;
   text-align: center;
   box-shadow: 0 20px 60px rgba(91, 70, 54, 0.14);
   backdrop-filter: blur(2px);
 }
 
+/* La photo occupe tout le tiers haut de la carte et en dessine l'arche.
+   Les marges négatives la sortent du padding pour la mener bord à bord ;
+   le rapport 8/5 place son bas au tiers de la hauteur totale.
+   Le cadrage vertical est remonté pour garder les visages et les mains. */
 .photo {
   display: block;
-  width: clamp(120px, 32vw, 172px);
-  height: clamp(120px, 32vw, 172px);
+  width: calc(100% + 2 * var(--pad-x));
+  aspect-ratio: 8 / 5;
+  height: auto;
   object-fit: cover;
-  border-radius: 50%;
-  margin: 0 auto 18px;
-  border: 3px solid rgba(255, 251, 245, 0.9);
-  box-shadow: 0 10px 30px rgba(91, 70, 54, 0.18), 0 0 0 1px rgba(191, 99, 73, 0.25);
+  object-position: center 8%;
+  margin: calc(-1 * var(--pad-top)) calc(-1 * var(--pad-x)) clamp(22px, 4vw, 32px);
+  border: 0;
+  border-radius: var(--arch) var(--arch) 0 0;
+  box-shadow: 0 8px 22px rgba(91, 70, 54, 0.14);
 }
 
 .wreath {
@@ -219,13 +250,16 @@ body {
   }
 
   .card {
-    border-radius: 140px 140px 20px 20px;
+    --arch: 140px;
+    border-radius: var(--arch) var(--arch) 20px 20px;
   }
 }
 
 .card--info {
+  --pad-x: clamp(24px, 6vw, 48px);
+  --pad-top: clamp(30px, 6vw, 48px);
+  --pad-bottom: clamp(30px, 6vw, 48px);
   border-radius: 28px;
-  padding: clamp(30px, 6vw, 48px) clamp(24px, 6vw, 48px);
 }
 
 .card__icon {
@@ -378,4 +412,313 @@ body {
   color: var(--brown);
   font-style: italic;
   line-height: 1.4;
+}
+
+/* ==========================================================================
+   Scène « enveloppe » pilotée au scroll
+   Activée par la classe .scene-on posée par le JS (absente si pas de JS
+   ou si l'utilisateur demande un mouvement réduit → mise en page empilée).
+   ========================================================================== */
+
+body.scene-on .page {
+  max-width: none;
+  padding: 0;
+  gap: 0;
+}
+
+body.scene-on .decor {
+  opacity: 0.4;
+}
+
+body.scene-on .scene {
+  height: calc(var(--scene-vh, 860) * 1vh);
+  height: calc(var(--scene-vh, 860) * 1svh);
+}
+
+body.scene-on .scene__stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  perspective: 1400px;
+  perspective-origin: 50% 38%;
+}
+
+/* --- Les cartes, empilées au centre de la scène --------------------------- */
+
+body.scene-on .deck {
+  display: block;
+}
+
+body.scene-on .deck > .card {
+  --ty: 0px;
+  --s: 1;
+  --sh: 1;
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: min(620px, 92vw); /* strictement la largeur de l'enveloppe */
+  max-width: none;
+  max-height: none;
+  overflow: visible;
+  margin: 0;
+  z-index: 5;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  background: #fffbf5;
+  /* L'ombre ne s'allume qu'une fois la carte sortie : son flou déborde
+     largement de la silhouette de l'enveloppe, on la verrait donc autour
+     de la poche alors que la carte est encore dedans. */
+  box-shadow: 0 26px 70px rgba(91, 70, 54, calc(0.22 * var(--sh)));
+  transform: translate3d(-50%, calc(-50% + var(--ty)), 0) scale(var(--s));
+  will-change: transform, opacity;
+}
+
+/* Un peu plus compact dans la scène : la carte gagne en lisibilité
+   puisque le JS la réduit ensuite juste ce qu'il faut pour tenir. */
+body.scene-on .deck > .card {
+  --pad-top: clamp(28px, 5vw, 48px);
+  --pad-bottom: clamp(28px, 5vw, 48px);
+}
+
+body.scene-on .deck > .card:first-child {
+  --arch: 180px;
+}
+
+/* --- L'enveloppe ---------------------------------------------------------- */
+/* Trois groupes encadrent les cartes : l'arrière (doublure + intérieur)
+   passe derrière, la face avant devant, et le rabat + le cachet encore
+   au-dessus — si bien qu'une carte peut réellement être « dans » la poche.
+   Chaque calque a son propre z-index plutôt que de compter sur le tri 3D
+   à l'intérieur d'un même groupe : dès qu'un filtre est appliqué à un
+   élément, il sort de ce tri et repasse devant ses voisins.
+   Les variables vivent sur la scène pour être partagées par les groupes. */
+
+body.scene-on .scene__stage {
+  --env-w: min(620px, 92vw); /* strictement la largeur des cartes */
+  --env-h: calc(var(--env-w) * 0.66);
+  --ety: 0px;
+  --es: 1;
+  --env-o: 1;
+  --flap: 0deg;
+  --mouth: 0;
+}
+
+body.scene-on .envelope {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--env-w);
+  height: var(--env-h);
+  transform: translate3d(-50%, calc(-50% + var(--ety)), 0) scale(var(--es));
+  transform-style: preserve-3d;
+  /* Surtout pas d'opacité ni de will-change:opacity ici : l'un comme
+     l'autre ramènent transform-style à flat et le tri 3D des faces
+     s'effondre. L'effacement final se fait donc face par face. */
+  will-change: transform;
+}
+
+.envelope__lining,
+.envelope__mouth,
+.envelope__front,
+.envelope__flap {
+  opacity: var(--env-o);
+}
+
+body.scene-on .envelope--back { z-index: 2; }
+body.scene-on .envelope--front { z-index: 20; }
+body.scene-on .envelope--lid { z-index: 30; }
+
+.envelope__lining {
+  position: absolute;
+  inset: 0;
+  transform: translateZ(0);
+  border-radius: 8px;
+  background: linear-gradient(170deg, #f0e4d1 0%, #ded9b0 100%);
+}
+
+/* L'intérieur sombre : il n'apparaît qu'au fur et à mesure que le rabat
+   se lève, sinon il déborderait dans les coins d'une enveloppe fermée. */
+.envelope__mouth {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 36%;
+  transform: translateZ(1px);
+  border-radius: 8px 8px 0 0;
+  background: linear-gradient(180deg, #c6b391 0%, #b5a07c 100%);
+  box-shadow: inset 0 10px 20px rgba(91, 70, 54, 0.35);
+  opacity: calc(var(--env-o) * var(--mouth));
+}
+
+.envelope__flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 62%;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  /* À peine plus clair que la face avant : le pli se lit surtout par
+     l'ombre portée le long des diagonales, pas par un écart de teinte. */
+  background: linear-gradient(180deg, #ebdec6 0%, #ddccab 100%);
+  transform-origin: 50% 0%;
+  /* rotateX d'abord : le +Z local bascule vers l'arrière une fois ouvert,
+     le rabat se range donc tout seul derrière la doublure. */
+  transform: rotateX(var(--flap)) translateZ(3px);
+  filter: drop-shadow(0 3px 4px rgba(91, 70, 54, 0.16));
+  transition: background 0.35s ease;
+}
+
+.envelope--back .envelope__flap {
+  background: linear-gradient(0deg, #d8c9ae 0%, #c6b492 100%);
+  box-shadow: inset 0 0 30px rgba(91, 70, 54, 0.12);
+}
+
+.envelope__front {
+  position: absolute;
+  inset: 0;
+  transform: translateZ(0);
+  /* Le bord haut suit les rabats latéraux plutôt qu'une arête droite :
+     fermée, la face avant et le rabat pavent exactement le rectangle,
+     sans jointure horizontale visible. */
+  clip-path: polygon(0 0, 50% 24%, 100% 0, 100% 100%, 0 100%);
+  border-radius: 0 0 8px 8px;
+  /* Ni liseré ni reflet marqué sur le bord haut : fermée, l'enveloppe ne
+     doit montrer aucune ligne horizontale. Le contraste de la poche
+     ouverte vient de l'intérieur sombre qui apparaît derrière. */
+  /* Le dégradé reprend exactement la teinte du dos à la hauteur du bord :
+     aucune marche de couleur ne trahit la jointure. */
+  background: linear-gradient(180deg, #e2d2b4 0%, #d3bd98 100%);
+  /* Une box-shadow serait rognée par le clip-path : l'arête du V se
+     détacherait alors sans aucune ombre sur la carte qui sort, ce qui se
+     lit comme une déchirure. drop-shadow suit la silhouette découpée et
+     pose bien l'ombre de la poche sur la carte. */
+  filter:
+    drop-shadow(0 -5px 8px rgba(91, 70, 54, 0.32))
+    drop-shadow(0 16px 30px rgba(91, 70, 54, 0.22));
+}
+
+.envelope__front::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(to bottom right, transparent calc(50% - 1px), rgba(91, 70, 54, 0.14) 50%, transparent calc(50% + 1px)),
+    linear-gradient(to bottom left, transparent calc(50% - 1px), rgba(91, 70, 54, 0.14) 50%, transparent calc(50% + 1px));
+}
+
+/* --- Le sceau de cire ----------------------------------------------------- */
+/* Le sceau ne se brise pas : il reste entier et suit le rabat. Son « bras »
+   subit exactement la même rotation, autour de la même charnière. Une fois
+   passé la verticale, il bascule sur sa face arrière et disparaît tout seul. */
+
+.envelope__seal-arm {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 0%;
+  transform: rotateX(var(--flap)) translateZ(4px);
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.envelope__seal {
+  --seal-o: 1;
+  position: absolute;
+  left: 50%;
+  top: 60%;
+  /* Le PNG a de larges marges transparentes : la cire n'occupe que 41,8 %
+     de sa largeur (283 px de cachet sur 677 px de toile) et son centre
+     tombe à 49,3 % / 49,5 %, donc l'élément se centre tel quel. La largeur
+     ci-dessous donne un cachet visible d'environ 20 % de l'enveloppe. */
+  width: 47.8%;
+  aspect-ratio: 677 / 369;
+  height: auto;
+  transform: translate3d(-50%, -50%, 0);
+  backface-visibility: hidden;
+  opacity: calc(var(--env-o) * var(--seal-o));
+  filter: drop-shadow(0 4px 7px rgba(91, 70, 54, 0.4));
+  pointer-events: none;
+}
+
+/* --- Indice de scroll et mot de fin --------------------------------------- */
+
+body.scene-on .scroll-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: absolute;
+  left: 50%;
+  bottom: clamp(16px, 4svh, 38px);
+  z-index: 40;
+  width: max-content;
+  max-width: 86vw;
+  margin: 0;
+  text-align: center;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.scroll-hint__text {
+  font-size: clamp(0.66rem, 1.8vw, 0.8rem);
+  letter-spacing: clamp(0.12em, 1vw, 0.28em);
+  text-transform: uppercase;
+  color: var(--sage-dark);
+}
+
+.scroll-hint__arrow {
+  font-size: 1.1rem;
+  color: var(--terracotta);
+  animation: hint-bob 1.9s ease-in-out infinite;
+}
+
+@keyframes hint-bob {
+  0%, 100% { transform: translateY(0); opacity: 0.6; }
+  50% { transform: translateY(7px); opacity: 1; }
+}
+
+body.scene-on .outro {
+  --oy: 24px;
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  z-index: 6;
+  margin: 0;
+  opacity: 0;
+  text-align: center;
+  font-family: "Parisienne", cursive;
+  font-size: clamp(2rem, 8vw, 3.4rem);
+  color: var(--terracotta-dark);
+  transform: translate3d(-50%, calc(-50% + var(--oy)), 0);
+}
+
+.outro__mark {
+  display: block;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 0.5em;
+  letter-spacing: 0.1em;
+  color: var(--mustard);
+  margin-bottom: 0.15em;
+}
+
+/* Filet de sécurité : jamais de scène si le mouvement réduit est demandé. */
+@media (prefers-reduced-motion: reduce) {
+  body.scene-on .page { padding: 24px 16px 56px; max-width: 672px; gap: clamp(24px, 5vw, 36px); }
+  body.scene-on .scene { height: auto; }
+  body.scene-on .scene__stage { position: static; height: auto; overflow: visible; }
+  body.scene-on .deck { display: flex; }
+  body.scene-on .deck > .card {
+    position: static; opacity: 1; visibility: visible; pointer-events: auto;
+    transform: none; max-height: none; overflow: visible; width: 100%; max-width: 640px;
+  }
+  body.scene-on .envelope,
+  body.scene-on .outro,
+  body.scene-on .scroll-hint { display: none; }
+  .scroll-hint__arrow { animation: none; }
 }

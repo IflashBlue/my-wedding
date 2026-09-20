@@ -31,6 +31,15 @@
 </svg>
 
 <main class="page">
+<div class="scene" id="scene">
+<div class="scene__stage">
+
+<div class="envelope envelope--back" id="envelopeBack" aria-hidden="true">
+  <div class="envelope__lining"></div>
+  <div class="envelope__mouth"></div>
+</div>
+
+<div class="deck" id="deck">
 <section class="card">
   <img class="photo" id="couplePhoto" src="assets/couple-placeholder.svg" alt="" />
 
@@ -145,6 +154,28 @@
   <p class="access-notes" id="giftNote"></p>
   <a class="map-link" id="fundLink" href="#" target="_blank" rel="noopener" hidden>Participer à la cagnotte</a>
 </section>
+</div>
+
+<div class="envelope envelope--front" id="envelopeFront" aria-hidden="true">
+  <div class="envelope__front"></div>
+</div>
+
+<div class="envelope envelope--lid" id="envelopeLid" aria-hidden="true">
+  <div class="envelope__flap" id="envelopeFlap"></div>
+  <div class="envelope__seal-arm" id="envelopeSealArm">
+    <img class="envelope__seal" id="envelopeSeal" src="assets/cire.png" alt="" />
+  </div>
+</div>
+
+<p class="outro" id="outro"><span class="outro__mark">❦</span>À très bientôt</p>
+
+<p class="scroll-hint" id="scrollHint">
+  <span class="scroll-hint__text">Faites défiler pour ouvrir</span>
+  <span class="scroll-hint__arrow" aria-hidden="true">↓</span>
+</p>
+
+</div>
+</div>
 </main>
 
 <script src="js/script.js"></script>
